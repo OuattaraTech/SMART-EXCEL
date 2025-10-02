@@ -10,12 +10,17 @@ backend/__pycache__/
 __pycache__/
 *.so
 
-# Fichiers de configuration locaux
+# Fichiers de configuration locaux et clés API
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
+backend/.env
+backend/config_local.py
+**/api_keys.txt
+**/*secret*
+**/*key*.txt
 
 # Logs
 npm-debug.log*
