@@ -1,4 +1,4 @@
-# 📊 Excel AI Editor
+# 📊 SMART-EXCEL - Excel AI Editor
 
 Une application web moderne pour l'édition intelligente de fichiers Excel avec intelligence artificielle.
 
@@ -45,8 +45,8 @@ Une application web moderne pour l'édition intelligente de fichiers Excel avec 
 
 ### 1. Cloner le projet
 ```bash
-git clone <url-du-repo>
-cd excel-ai-editor
+git clone https://github.com/OuattaraTech/SMART-EXCEL.git
+cd SMART-EXCEL
 ```
 
 ### 2. Installation du Backend
@@ -80,22 +80,35 @@ npm install
 
 ## 🚀 Lancement de l'Application
 
-### 1. Démarrer le Backend
+### Démarrage Automatique (Recommandé)
 
+#### Windows
+```bash
+# Double-cliquez sur le fichier ou exécutez :
+start.bat
+```
+
+#### macOS/Linux
+```bash
+# Rendez le script exécutable puis lancez :
+chmod +x start.sh
+./start.sh
+```
+
+### Démarrage Manuel
+
+#### 1. Démarrer le Backend
 ```bash
 cd backend
 python app.py
 ```
-
 Le serveur Flask démarre sur `http://localhost:5000`
 
-### 2. Démarrer le Frontend
-
+#### 2. Démarrer le Frontend
 ```bash
 cd frontend
 npm start
 ```
-
 L'interface React démarre sur `http://localhost:3000`
 
 ### 3. Accéder à l'Application
@@ -199,7 +212,7 @@ L'architecture supporte facilement d'autres APIs :
 ## 📁 Structure du Projet
 
 ```
-excel-ai-editor/
+SMART-EXCEL/
 ├── backend/                 # API Flask
 │   ├── app.py              # Application principale
 │   ├── requirements.txt    # Dépendances Python
@@ -213,7 +226,11 @@ excel-ai-editor/
 │   │   ├── App.js         # Composant principal
 │   │   └── index.js       # Point d'entrée
 │   └── package.json       # Dépendances Node.js
-└── README.md              # Documentation
+├── examples/              # Données et commandes d'exemple
+├── docker-compose.yml     # Configuration Docker
+├── start.bat             # Script de démarrage Windows
+├── start.sh              # Script de démarrage macOS/Linux
+└── README.md             # Documentation
 ```
 
 ## 🧪 Tests
@@ -283,4 +300,4 @@ Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
 
 ---
 
-**Développé avec ❤️ pour simplifier l'édition de fichiers Excel**
+**Développé avec ❤️ par [OuattaraTech](https://github.com/OuattaraTech) pour simplifier l'édition de fichiers Excel**
