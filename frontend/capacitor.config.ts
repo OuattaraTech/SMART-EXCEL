@@ -1,14 +1,16 @@
-import { CapacitorConfig } from '@capacitor/cli';
-
-const config: CapacitorConfig = {
+// @ts-ignore - Capacitor CLI sera installé plus tard
+const config = {
   appId: 'com.ouattaratech.smartexcel',
   appName: 'SMART-EXCEL',
   webDir: 'build',
+  bundledWebRuntime: false,
   server: {
     androidScheme: 'https',
-    // Pour le développement, décommentez et mettez votre IP locale
-    // url: 'http://192.168.1.100:3000',
-    // cleartext: true
+    allowNavigation: [
+      'localhost:5000',
+      '192.168.1.*',
+      '10.0.2.2:5000'  // Pour émulateur Android
+    ]
   },
   plugins: {
     SplashScreen: {

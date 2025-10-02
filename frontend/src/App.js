@@ -18,6 +18,22 @@ import LoadingSpinner from './components/LoadingSpinner';
 
 // Services
 import { apiService } from './services/apiService';
+import mobileApiService from './services/mobileApiService';
+
+// Détecter si on est sur mobile et utiliser le bon service
+const getApiService = () => {
+  try {
+    // Vérifier si Capacitor est disponible
+    if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+      return mobileApiService;
+    }
+  } catch (error) {
+    console.log('Capacitor non disponible, utilisation du service web');
+  }
+  return apiService;
+};
+
+const currentApiService = getApiService();
 
 // Thème Material-UI personnalisé
 const theme = createTheme({
@@ -83,7 +99,7 @@ function App() {
   const handleFileUpload = useCallback(async (file) => {
     setLoading(true);
     try {
-      const response = await apiService.uploadFile(file);
+      const response = await currentApiService.uploadFile(file);
       
       if (response.success) {
         setExcelData(response.data);
@@ -113,7 +129,7 @@ function App() {
    */
   const handleCellUpdate = useCallback(async (rowId, column, newValue) => {
     try {
-      const response = await apiService.updateCell(rowId, column, newValue);
+      const response = await currentApiService.updateCell(rowId, column, newValue);
       
       if (response.success) {
         setHasUnsavedChanges(true);
@@ -158,7 +174,7 @@ function App() {
 
     setLoading(true);
     try {
-      const response = await apiService.processAICommand(command);
+      const response = await currentApiService.processAICommand(command);
       
       if (response.success) {
         // Si des nouvelles données sont disponibles, les mettre à jour
@@ -203,7 +219,7 @@ function App() {
     setLoading(true);
     try {
       const filename = `export_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`;
-      await apiService.exportFile(filename);
+      await currentApiService.exportFile(filename);
       
       setHasUnsavedChanges(false);
       toast.success('Fichier exporté avec succès!', {
@@ -229,7 +245,7 @@ function App() {
     
     setLoading(true);
     try {
-      const response = await apiService.getData();
+      const response = await currentApiService.getData();
       if (response.success) {
         setExcelData(response.data);
         toast.success('Données actualisées', {

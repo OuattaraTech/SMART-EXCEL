@@ -4,23 +4,94 @@
  */
 
 import axios from 'axios';
-import { Capacitor } from '@capacitor/core';
-import { Network } from '@capacitor/network';
-import { Toast } from '@capacitor/toast';
-import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { Share } from '@capacitor/share';
 
-// Détecter si on est sur mobile
+// Imports Capacitor avec gestion d'erreur
+let Capacitor, Network, Toast, Filesystem, Directory, Encoding, Share;
+
+try {
+  // Essayer d'importer Capacitor et ses plugins
+  const capacitorCore = require('@capacitor/core');
+  Capacitor = capacitorCore.Capacitor;
+  
+  const networkPlugin = require('@capacitor/network');
+  Network = networkPlugin.Network;
+  
+  const toastPlugin = require('@capacitor/toast');
+  Toast = toastPlugin.Toast;
+  
+  const filesystemPlugin = require('@capacitor/filesystem');
+  Filesystem = filesystemPlugin.Filesystem;
+  Directory = filesystemPlugin.Directory;
+  Encoding = filesystemPlugin.Encoding;
+  
+  const sharePlugin = require('@capacitor/share');
+  Share = sharePlugin.Share;
+  
+  console.log('✅ Plugins Capacitor chargés avec succès');
+} catch (error) {
+  console.log('⚠️ Capacitor non disponible, mode web activé:', error.message);
+  
+  // Fallbacks pour le mode web
+  Capacitor = {
+    isNativePlatform: () => false,
+    getPlatform: () => 'web'
+  };
+  
+  Network = {
+    getStatus: () => Promise.resolve({ connected: true, connectionType: 'wifi' })
+  };
+  
+  Toast = {
+    show: ({ text }) => {
+      console.log('Toast (web):', text);
+      // Fallback avec alert ou notification web
+      if (typeof window !== 'undefined') {
+        // Utiliser une notification web ou alert
+        alert(text);
+      }
+      return Promise.resolve();
+    }
+  };
+  
+  Filesystem = {
+    writeFile: () => Promise.reject(new Error('Filesystem non disponible en mode web')),
+    readFile: () => Promise.reject(new Error('Filesystem non disponible en mode web'))
+  };
+  
+  Share = {
+    share: () => Promise.reject(new Error('Share non disponible en mode web'))
+  };
+}
+
+// Détecter si on est sur mobile avec gestion d'erreur robuste
 const isMobile = () => {
-  return Capacitor.isNativePlatform();
+  try {
+    // Vérifier si Capacitor est disponible globalement
+    if (typeof window !== 'undefined' && window.Capacitor) {
+      return window.Capacitor.isNativePlatform();
+    }
+    // Vérifier si Capacitor est importé
+    if (typeof Capacitor !== 'undefined' && Capacitor.isNativePlatform) {
+      return Capacitor.isNativePlatform();
+    }
+    return false;
+  } catch (error) {
+    console.log('Capacitor non disponible, mode web activé');
+    return false;
+  }
 };
 
 // Obtenir l'URL de l'API selon la plateforme
 const getApiUrl = () => {
   if (isMobile()) {
-    // Sur mobile, utiliser l'IP de votre serveur de développement
-    // Remplacez par l'IP de votre machine où tourne le backend
-    return 'http://192.168.1.100:5000/api'; // À adapter selon votre réseau
+    // Sur mobile, essayer plusieurs URLs
+    const possibleUrls = [
+      'http://10.0.2.2:5000/api',      // Émulateur Android
+      'http://192.168.1.100:5000/api', // IP locale (à adapter)
+      'http://localhost:5000/api'       // Fallback
+    ];
+    // Pour l'instant, utiliser la première
+    return possibleUrls[0];
   }
   return process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 };
