@@ -1,0 +1,72 @@
+# Configuration Docker Compose pour Excel AI Editor
+# Permet de lancer facilement l'application complète avec Docker
+
+version: '3.8'
+
+services:
+  # Service Backend Flask
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: excel-ai-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=False
+      - PYTHONPATH=/app
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/exports:/app/exports
+    networks:
+      - excel-ai-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Service Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: excel-ai-frontend
+    ports:
+      - "3000:80"
+    environment:
+      - REACT_APP_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+    networks:
+      - excel-ai-network
+    restart: unless-stopped
+
+  # Service Nginx (optionnel pour la production)
+  nginx:
+    image: nginx:alpine
+    container_name: excel-ai-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - excel-ai-network
+    restart: unless-stopped
+    profiles:
+      - production
+
+networks:
+  excel-ai-network:
+    driver: bridge
+
+volumes:
+  uploads_data:
+  exports_data:

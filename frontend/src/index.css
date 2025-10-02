@@ -1,0 +1,213 @@
+/**
+ * Styles CSS globaux pour l'application Excel AI Editor
+ * Définit les styles de base et les variables CSS personnalisées
+ */
+
+/* Reset et styles de base */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+code {
+  font-family: 'Fira Code', 'Monaco', 'Cascadia Code', 'Roboto Mono', monospace;
+}
+
+/* Variables CSS personnalisées */
+:root {
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-color: #667eea;
+  --secondary-color: #764ba2;
+  --success-color: #4caf50;
+  --warning-color: #ff9800;
+  --error-color: #f44336;
+  --info-color: #2196f3;
+  
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --background-paper: #ffffff;
+  --background-default: #f8fafc;
+  
+  --shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-heavy: 0 8px 25px rgba(0, 0, 0, 0.15);
+  
+  --border-radius: 8px;
+  --border-radius-large: 12px;
+}
+
+/* Styles pour AG-Grid */
+.ag-theme-alpine {
+  --ag-font-family: 'Inter', sans-serif;
+  --ag-font-size: 14px;
+  --ag-border-radius: 4px;
+  --ag-borders: solid 1px #e0e0e0;
+  --ag-header-background-color: #fafafa;
+  --ag-odd-row-background-color: #fafafa;
+  --ag-row-hover-color: rgba(102, 126, 234, 0.05);
+  --ag-selected-row-background-color: rgba(102, 126, 234, 0.1);
+}
+
+/* Personnalisation des en-têtes AG-Grid */
+.ag-theme-alpine .ag-header-cell {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Styles pour les cellules éditables */
+.ag-theme-alpine .ag-cell-edit-input {
+  border: 2px solid var(--primary-color) !important;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Animation pour les cellules modifiées */
+.ag-theme-alpine .ag-cell-data-changed {
+  background-color: rgba(76, 175, 80, 0.1) !important;
+  transition: background-color 0.3s ease;
+}
+
+/* Styles pour les notifications toast */
+.Toastify__toast {
+  border-radius: var(--border-radius);
+  font-family: 'Inter', sans-serif;
+}
+
+.Toastify__toast--success {
+  background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+}
+
+.Toastify__toast--error {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+}
+
+.Toastify__toast--warning {
+  background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+}
+
+.Toastify__toast--info {
+  background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%);
+}
+
+/* Styles pour le drag & drop */
+.dropzone-active {
+  border-color: var(--primary-color) !important;
+  background-color: rgba(102, 126, 234, 0.05) !important;
+}
+
+.dropzone-accept {
+  border-color: var(--success-color) !important;
+  background-color: rgba(76, 175, 80, 0.05) !important;
+}
+
+.dropzone-reject {
+  border-color: var(--error-color) !important;
+  background-color: rgba(244, 67, 54, 0.05) !important;
+}
+
+/* Animations personnalisées */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Classes utilitaires */
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+/* Styles pour l'accessibilité */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Focus visible pour l'accessibilité clavier */
+.focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Styles pour les écrans de petite taille */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+  
+  .ag-theme-alpine {
+    --ag-font-size: 12px;
+  }
+}
+
+/* Styles pour l'impression */
+@media print {
+  body {
+    background: white !important;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Styles pour le mode sombre (si implémenté plus tard) */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --background-paper: #1e1e1e;
+    --background-default: #121212;
+  }
+}
