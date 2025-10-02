@@ -12,22 +12,28 @@ import numpy as np
 import io
 import os
 import json
-import openai
+import openai  # Activé avec votre clé API
 from datetime import datetime
 import tempfile
 import logging
+from config import Config
 
 # Configuration du logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-CORS(app)  # Permet les requêtes cross-origin depuis le frontend React
 
-# Configuration
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limite à 16MB
-UPLOAD_FOLDER = 'uploads'
-EXPORT_FOLDER = 'exports'
+# Configuration de l'application
+app.config.from_object(Config)
+CORS(app, origins=Config.CORS_ORIGINS)  # Configuration CORS sécurisée
+
+# Configuration OpenAI
+openai.api_key = Config.OPENAI_API_KEY
+
+# Configuration des dossiers
+UPLOAD_FOLDER = Config.UPLOAD_FOLDER
+EXPORT_FOLDER = Config.EXPORT_FOLDER
 
 # Créer les dossiers nécessaires
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -128,10 +134,12 @@ class AICommandProcessor:
     """Classe pour traiter les commandes IA en langage naturel"""
     
     def __init__(self, api_key=None):
-        # Configuration OpenAI (optionnelle - peut être remplacée par d'autres APIs)
+        # Configuration OpenAI
+        self.openai_client = openai
         if api_key:
-            openai.api_key = api_key
+            self.openai_client.api_key = api_key
         self.processor = None
+        self.use_openai = True  # Activer l'IA OpenAI
     
     def set_processor(self, processor):
         """Définit le processeur Excel à utiliser"""
@@ -140,9 +148,14 @@ class AICommandProcessor:
     def interpret_command(self, command, df_info):
         """Interprète une commande en langage naturel et génère du code pandas"""
         
-        # Système de règles simple pour les commandes courantes
-        # En production, ceci serait remplacé par un appel à l'API OpenAI/Gemini
+        # Essayer d'abord avec OpenAI si disponible
+        if self.use_openai and hasattr(self.openai_client, 'api_key'):
+            try:
+                return self._interpret_with_openai(command, df_info)
+            except Exception as e:
+                logger.warning(f"Erreur OpenAI: {e}. Utilisation du système de règles.")
         
+        # Système de règles simple en fallback
         command_lower = command.lower()
         
         # Détection des types de commandes
@@ -160,6 +173,119 @@ class AICommandProcessor:
             return {
                 'success': False,
                 'message': 'Commande non reconnue. Essayez: "Calcule la somme de la colonne X", "Ajoute une colonne Y", "Filtre les lignes où X > 10"'
+            }
+    
+    def _interpret_with_openai(self, command, df_info):
+        """Utilise OpenAI GPT pour interpréter la commande de manière avancée"""
+        try:
+            # Préparer le contexte pour GPT
+            columns_info = ", ".join(df_info['columns'])
+            data_shape = f"{df_info['shape'][0]} lignes, {df_info['shape'][1]} colonnes"
+            
+            # Prompt système pour GPT
+            system_prompt = f"""Tu es un assistant IA spécialisé dans l'analyse de données Excel avec pandas.
+            
+Contexte du fichier Excel:
+- Colonnes disponibles: {columns_info}
+- Taille des données: {data_shape}
+
+Tu dois interpréter les commandes utilisateur et retourner une réponse JSON avec:
+- "action": le type d'action (calculate, filter, add_column, sort, etc.)
+- "column": la colonne concernée (si applicable)
+- "operation": l'opération à effectuer
+- "value": la valeur ou paramètre (si applicable)
+- "message": message de confirmation pour l'utilisateur
+
+Exemples de réponses:
+- Pour "Calcule la somme de la colonne Prix": {{"action": "calculate", "column": "Prix", "operation": "sum", "message": "Calcul de la somme de la colonne Prix"}}
+- Pour "Ajoute une colonne TVA à 20%": {{"action": "add_column", "column": "TVA", "operation": "percentage", "value": 20, "message": "Ajout d'une colonne TVA à 20%"}}
+"""
+
+            user_prompt = f"Commande utilisateur: {command}"
+            
+            # Appel à l'API OpenAI
+            response = self.openai_client.chat.completions.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_tokens=500,
+                temperature=0.3
+            )
+            
+            # Parser la réponse
+            ai_response = response.choices[0].message.content.strip()
+            
+            try:
+                # Essayer de parser comme JSON
+                import json
+                parsed_response = json.loads(ai_response)
+                
+                # Exécuter l'action déterminée par l'IA
+                return self._execute_ai_action(parsed_response, df_info)
+                
+            except json.JSONDecodeError:
+                # Si ce n'est pas du JSON, utiliser la réponse comme message
+                return {
+                    'success': True,
+                    'message': f"IA: {ai_response}",
+                    'operation': 'ai_response'
+                }
+                
+        except Exception as e:
+            logger.error(f"Erreur OpenAI: {e}")
+            raise e
+    
+    def _execute_ai_action(self, ai_response, df_info):
+        """Exécute l'action déterminée par l'IA"""
+        try:
+            action = ai_response.get('action', '')
+            column = ai_response.get('column', '')
+            operation = ai_response.get('operation', '')
+            value = ai_response.get('value', '')
+            message = ai_response.get('message', 'Action IA exécutée')
+            
+            if action == 'calculate' and operation == 'sum':
+                # Calculer la somme
+                if column in self.processor.df.columns:
+                    result = self.processor.df[column].sum()
+                    return {
+                        'success': True,
+                        'message': f'{message}. Résultat: {result}',
+                        'operation': 'calculation',
+                        'result': result
+                    }
+            
+            elif action == 'add_column' and operation == 'percentage':
+                # Ajouter une colonne avec pourcentage
+                # Chercher une colonne de prix/montant
+                price_column = None
+                for col in self.processor.df.columns:
+                    if any(word in col.lower() for word in ['prix', 'price', 'montant', 'amount', 'total']):
+                        price_column = col
+                        break
+                
+                if price_column and value:
+                    self.processor.df[column] = self.processor.df[price_column] * (float(value) / 100)
+                    return {
+                        'success': True,
+                        'message': f'{message}. Colonne {column} ajoutée avec {value}% de {price_column}',
+                        'operation': 'add_column',
+                        'refresh_needed': True
+                    }
+            
+            # Action générique réussie
+            return {
+                'success': True,
+                'message': message,
+                'operation': 'ai_action'
+            }
+            
+        except Exception as e:
+            return {
+                'success': False,
+                'message': f'Erreur lors de l\'exécution de l\'action IA: {str(e)}'
             }
     
     def _handle_sum_command(self, command, df_info):
@@ -289,7 +415,7 @@ class AICommandProcessor:
 
 # Initialisation des processeurs
 excel_processor = ExcelProcessor()
-ai_processor = AICommandProcessor()
+ai_processor = AICommandProcessor(api_key=Config.OPENAI_API_KEY)
 ai_processor.set_processor(excel_processor)
 
 @app.route('/api/upload', methods=['POST'])

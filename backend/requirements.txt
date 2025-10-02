@@ -2,21 +2,21 @@
 # Backend Flask avec traitement de fichiers Excel
 
 # Framework web
-Flask==2.3.3
-Flask-CORS==4.0.0
+Flask>=2.3.0
+Flask-CORS>=4.0.0
 
 # Traitement de données
-pandas==2.1.1
-numpy==1.24.3
-openpyxl==3.1.2  # Pour lire/écrire les fichiers Excel .xlsx
-xlrd==2.0.1      # Pour lire les anciens fichiers Excel .xls
+pandas>=2.0.0
+numpy>=1.21.0
+openpyxl>=3.1.0
+xlrd>=2.0.0
 
-# IA et traitement de texte (optionnel - remplacer par votre API préférée)
-openai==0.28.1
+# IA et traitement de texte
+openai>=1.0.0
 
 # Utilitaires
-python-dateutil==2.8.2
-pytz==2023.3
+python-dateutil>=2.8.0
+pytz>=2023.0
 
 # Développement et logging
-Werkzeug==2.3.7
+Werkzeug>=2.3.0
